@@ -97,7 +97,13 @@ class MumbleWidget extends \WP_Widget {
 	function ajax_request() {
 		if(isset($_GET['mywidget_request']) && $_GET['mywidget_request'] == 'mumble_action')	 {
 			$instance = get_option($this->option_name);
-			$this->display_widget($instance[4]);
+			foreach($instance as $key => $val) {
+				if(is_array($val) && array_key_exists('server-id', $val)) {
+					$instance = $instance[$key];
+					break;
+				}
+			}
+			$this->display_widget($instance);
 			exit();
 		}
 	}
