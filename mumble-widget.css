@@ -1,5 +1,5 @@
 @CHARSET "UTF-8";
-#mumble-widget-div { overflow-y: scroll; overflow-x: hidden; }
+#mumble-widget-div { overflow-y: auto; overflow-x: hidden; }
 #mumble-widget-div ul { margin-left: 10px; }
 #mumble-widget-div ul li { color: white; font-size: 10px; line-height: 16px; }
 #mumble-widget-div ul li img { padding-right: 5px; float: left; }
