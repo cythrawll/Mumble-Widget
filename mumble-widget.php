@@ -22,27 +22,32 @@ class MumbleWidget extends \WP_Widget {
 		$mumble = json_decode($mumbleContents);
 		echo $before_widget;
 		echo $before_title."Mumble".$after_title;
-		?><div style="height: 500px; overflow-y: scroll; overflow-x: hidden;"><?php
-		$this->display_channel("-1", $mumble);
-		?><div><?php
+		?>
+		<link rel="stylesheet" href="<?php echo plugins_url('mumble-widget.css', __FILE__); ?>" type="text/css" media="screen" />
+		<div style="height: 500px;" id="mumble-widget-div">
+		<?php $this->display_channel("-1", $mumble); ?>
+		<div>
+		<?php
 		echo $after_widget;
 	}
 	
 	protected function display_channel($parent, $mumble) {
-		?> <ul style="margin-left: 10px;"> <?php
+		?> <ul class="mumble-widget-channel"> <?php
 		foreach($mumble->channels as $channel) {
 			if($channel->parent == $parent) {
-				?><li style="color: white; font-weight: bold; font-size: 10px; line-height: 16px;"><img src="/wp-content/plugins/mumble-widget/images/chat.png" style="padding-right: 5px; float: left;"/><div style="height: 22px; vertical-align: middle"><?php echo $channel->name; ?></div><?php $this->display_users($channel->id, $mumble); $this->display_channel($channel->id, $mumble); ?></li><?php
+				?><li><img src="<?php echo plugins_url('images/chat.png', __FILE__); ?>" /><div><?php echo $channel->name; ?></div>
+				<?php $this->display_users($channel->id, $mumble); $this->display_channel($channel->id, $mumble); ?></li>
+				<?php
 			}
 		}
 		?></ul><?php
 	}
 	
 	protected function display_users($id, $mumble) {
-		?> <ul style="margin-left: 10px;"> <?php
+		?> <ul class="mumble-widget-user"> <?php
 		foreach($mumble->users as $user) {
 			if($user->channel == $id) {
-				?><li style="color: white; font-weight: normal; font-size: 10px; line-height: 16px;"><img src="/wp-content/plugins/mumble-widget/images/user.png" style="padding-right: 5px; float: left";/><div style="height: 22px; vertical-align: middle"><?php echo $user->name;?></div></li><?php
+				?><li><img src="<?php echo plugins_url('images/user.png', __FILE__); ?>" /><div><?php echo $user->name;?></div></li><?php
 			}
 		}
 		?></ul><?php
