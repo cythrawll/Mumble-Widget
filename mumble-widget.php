@@ -18,17 +18,38 @@ class MumbleWidget extends \WP_Widget {
 	
 	function widget($args, $instance) {
 		extract($args);
-		$mumbleContents = file_get_contents("http://mmo-mumble.com/account/servers/".$instance['server-id']."/status.json?token=".$instance['api-key']."&secret=".$instance['api-secret']);
-		$mumble = json_decode($mumbleContents);
 		echo $before_widget;
 		echo $before_title."Mumble".$after_title;
 		?>
 		<link rel="stylesheet" href="<?php echo plugins_url('mumble-widget.css', __FILE__); ?>" type="text/css" media="screen" />
-		<div style="height: 500px;" id="mumble-widget-div">
-		<?php $this->display_channel("-1", $mumble); ?>
-		<div>
+		<script type="text/javascript">
+		    var mumbleWidgetAjaxHtml = '<img src="<?php echo plugins_url('images/ajax.gif', __FILE__); ?>" alt="loading.." title="loading.." />';
+			function show_widget() {
+				jQuery('#mumble-widget-div').empty().append(mumbleWidgetAjaxHtml);
+				jQuery.get('index.php', {mywidget_request: 'mumble_action'}, function(data) {
+					jQuery('#mumble-widget-div').empty().append(data);
+				});
+			}
+
+			jQuery(document).ready(function() { 
+				show_widget();
+				jQuery('#mumble-widget-refresh').live('click', function() {
+					show_widget();
+					return false;
+				});
+			});
+		</script>
+		<div style="max-height: <?php echo $instance['max-height'];?>px;" id="mumble-widget-div">
+		</div>
+		<a href="//:" id="mumble-widget-refresh">refresh</a>
 		<?php
 		echo $after_widget;
+	}
+	
+	protected function display_widget($instance) {
+		$mumbleContents = file_get_contents("http://mmo-mumble.com/account/servers/".$instance['server-id']."/status.json?token=".$instance['api-key']."&secret=".$instance['api-secret']);
+		$mumble = json_decode($mumbleContents);
+		$this->display_channel("-1", $mumble);
 	}
 	
 	protected function display_channel($parent, $mumble) {
@@ -61,6 +82,9 @@ class MumbleWidget extends \WP_Widget {
 		if(filter_var($new_instance['server-id'], FILTER_VALIDATE_INT) !== false) {
 			$instance['server-id'] = $new_instance['server-id']; 
 		}
+		if(filter_var($new_instance['max-height'], FILTER_VALIDATE_INT) !== false) {
+			$instance['max-height'] = $new_instance['max-height']; 
+		}
 		if(preg_match('#^[a-f0-9]+$#', $new_instance['api-key'])) {
 			$instance['api-key'] = $new_instance['api-key']; 
 		}
@@ -70,8 +94,16 @@ class MumbleWidget extends \WP_Widget {
 		return $instance;
 	}
 	
+	function ajax_request() {
+		if(isset($_GET['mywidget_request']) && $_GET['mywidget_request'] == 'mumble_action')	 {
+			$instance = get_option($this->option_name);
+			$this->display_widget($instance[4]);
+			exit();
+		}
+	}
+	
 	function form($instance) {
-		$defaults = array("server-id" => "", "api-key" => "", "api-secret" => "");
+		$defaults = array("server-id" => "", "api-key" => "", "api-secret" => "", "max-height" => 500);
 		$instance = wp_parse_args((array)$instance, $defaults);
 		?>
 		<p>
@@ -86,6 +118,10 @@ class MumbleWidget extends \WP_Widget {
 		    <label for="<?php echo $this->get_field_id('api-secret'); ?>">API Secret:</label>
 		    <input type="text" id="<?php echo $this->get_field_id('api-secret'); ?>" name="<?php echo $this->get_field_name('api-secret'); ?>" value="<?php echo $instance['api-secret']; ?>" style="width: 100%" />
 		</p>
+		<p>
+		    <label for="<?php echo $this->get_field_id('max-height'); ?>">Max Widget Height:</label>
+		    <input type="text" id="<?php echo $this->get_field_id('max-height'); ?>" name="<?php echo $this->get_field_name('max-height'); ?>" value="<?php echo $instance['max-height']; ?>" style="width: 100%" />
+		</p>
 		
 		<?php
 	}
@@ -93,4 +129,9 @@ class MumbleWidget extends \WP_Widget {
 
 add_action('widgets_init',function(){
      return register_widget('com\legionofsittingducks\MumbleWidget');
+});
+
+add_action('widgets_init',function(){
+     $widget = new MumbleWidget();
+     $widget->ajax_request();
 });
